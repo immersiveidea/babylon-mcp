@@ -1,0 +1,39 @@
+{
+  "name": "babylon-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/mcp/index.js",
+    "dev": "tsx watch src/mcp/index.ts",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "express": "^5.1.0",
+    "simple-git": "^3.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.1",
+    "@types/supertest": "^6.0.3",
+    "@vitest/coverage-v8": "^4.0.13",
+    "nodemon": "^3.1.11",
+    "supertest": "^7.1.4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.13"
+  }
+}
