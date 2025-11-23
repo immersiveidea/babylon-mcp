@@ -1,3 +1,4 @@
+import 'newrelic';
 import { BabylonMCPServer } from './server.js';
 
 async function main() {
