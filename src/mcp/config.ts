@@ -5,14 +5,21 @@
 
 export const MCP_SERVER_CONFIG = {
   name: 'babylon-mcp',
-  version: '1.0.0',
+  version: '1.1.0',
   description: 'Babylon.js Documentation and Examples MCP Server',
   author: 'Babylon MCP Team',
 
   capabilities: {
     tools: {
-      description: 'Provides tools for searching and retrieving Babylon.js documentation',
-      available: ['search_babylon_docs', 'get_babylon_doc'],
+      description:
+        'Provides tools for searching and retrieving Babylon.js documentation, API references, and source code',
+      available: [
+        'search_babylon_docs',
+        'get_babylon_doc',
+        'search_babylon_api',
+        'search_babylon_source',
+        'get_babylon_source',
+      ],
     },
     prompts: {
       description: 'Future: Pre-defined prompts for common Babylon.js tasks',
@@ -25,8 +32,13 @@ export const MCP_SERVER_CONFIG = {
   },
 
   instructions:
-    'Babylon MCP Server provides access to Babylon.js documentation, API references, and code examples. ' +
-    'Use search_babylon_docs to find relevant documentation, and get_babylon_doc to retrieve specific pages. ' +
+    'Babylon MCP Server provides access to Babylon.js documentation, API references, and source code. ' +
+    'Available tools:\n' +
+    '- search_babylon_docs: Search documentation with optional category filtering\n' +
+    '- get_babylon_doc: Retrieve full documentation page by path\n' +
+    '- search_babylon_api: Search API documentation (classes, methods, properties)\n' +
+    '- search_babylon_source: Search Babylon.js source code files with optional package filtering\n' +
+    '- get_babylon_source: Retrieve source file content with optional line range\n' +
     'This server helps reduce token usage by providing a canonical source for Babylon.js framework information.',
 
   transport: {
@@ -44,11 +56,11 @@ export const MCP_SERVER_CONFIG = {
     },
     babylonSource: {
       repository: 'https://github.com/BabylonJS/Babylon.js.git',
-      description: 'Babylon.js source code (future integration)',
+      description: 'Babylon.js source code repository',
     },
     havok: {
       repository: 'https://github.com/BabylonJS/havok.git',
-      description: 'Havok Physics integration (future)',
+      description: 'Havok Physics integration',
     },
   },
 } as const;

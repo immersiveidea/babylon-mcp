@@ -125,6 +125,10 @@ Successfully implemented vector search with local embeddings:
   - Reduces need to repeatedly fetch basic information
 - [ ] Create canonical response templates for common questions
 - [ ] Add version-specific context handling
+- [ ] Add resource subscriptions for documentation/source updates
+  - Convert get_babylon_doc and get_babylon_source from tools to resources
+  - Implement file watching for repository changes
+  - Send resource update notifications to subscribed clients
 
 ---
 

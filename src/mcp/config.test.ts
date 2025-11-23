@@ -31,7 +31,10 @@ describe('MCP_SERVER_CONFIG', () => {
       const tools = MCP_SERVER_CONFIG.capabilities.tools.available;
       expect(tools).toContain('search_babylon_docs');
       expect(tools).toContain('get_babylon_doc');
-      expect(tools.length).toBe(2);
+      expect(tools).toContain('search_babylon_api');
+      expect(tools).toContain('search_babylon_source');
+      expect(tools).toContain('get_babylon_source');
+      expect(tools.length).toBe(5);
     });
 
     it('should define prompts capability', () => {
@@ -55,6 +58,9 @@ describe('MCP_SERVER_CONFIG', () => {
       const instructions = MCP_SERVER_CONFIG.instructions;
       expect(instructions).toContain('search_babylon_docs');
       expect(instructions).toContain('get_babylon_doc');
+      expect(instructions).toContain('search_babylon_api');
+      expect(instructions).toContain('search_babylon_source');
+      expect(instructions).toContain('get_babylon_source');
     });
   });
 
