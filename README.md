@@ -44,6 +44,18 @@ npm install
 npm run build
 ```
 
+### Alpine Linux Setup
+
+If you're running on Alpine Linux (musl libc), you need an additional setup step after installing dependencies:
+
+```bash
+npm install
+npm run alpine:setup
+npm run build
+```
+
+This removes the incompatible `onnxruntime-node` native module and configures the system to use the WASM backend instead. The WASM backend is slightly slower but works on all platforms.
+
 ## Initial Setup
 
 Before using the MCP server, you need to index the Babylon.js repositories. This is a one-time setup process.
