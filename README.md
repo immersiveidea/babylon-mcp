@@ -169,38 +169,25 @@ After updating the configuration, restart Claude Desktop for the changes to take
 
 ### Claude Code CLI Configuration
 
-To use this MCP server with Claude Code (command line), add it to your Claude Code configuration file.
+To use this MCP server with Claude Code (command line), use the CLI command to connect directly.
 
-#### Configuration File Location
+**IMPORTANT**: Ensure the MCP server is running before connecting (see "Starting the Server" section above).
 
-- **macOS/Linux**: `~/.claude/config.json`
-- **Windows**: `%USERPROFILE%\.claude\config.json`
+#### CLI Usage
 
-#### Configuration
-
-Add the following to your `config.json`:
-
-```json
-{
-  "mcpServers": {
-    "babylon-mcp": {
-      "url": "http://localhost:4000/mcp"
-    }
-  }
-}
-```
-
-#### Usage
-
-After configuration, you can use the `/mcp` command in Claude Code to interact with the server:
+Connect to the MCP server using the `/mcp` command with the server URL:
 
 ```bash
-# Connect to the MCP server
-/mcp babylon-mcp
+# In Claude Code, connect to the running MCP server
+/mcp http://localhost:4000/mcp
 
-# Use the tools
+# Now you can use the tools
 Search for "Vector3" in Babylon.js documentation
 ```
+
+The `/mcp` command connects to the HTTP endpoint and makes the Babylon.js tools available in your session.
+
+**Note**: Configuration file support for HTTP MCP servers is being investigated. Currently, use the CLI command above for the most reliable connection method.
 
 ## Available MCP Tools
 

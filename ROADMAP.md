@@ -51,6 +51,10 @@ Successfully implemented vector search with local embeddings:
   - [I] Include: CHANGELOG.md, package READMEs, contributing guides
   - [ ] Phase 2: Evaluate TypeDoc integration for API reference
 - [ ] Create documentation change detection system
+- [ ] Research and fix Claude Code config file integration issue
+  - CLI `/mcp http://localhost:4000/mcp` works
+  - Config file `~/.claude/config.json` approach does not work
+  - Need to investigate proper config file format for HTTP MCP servers
 
 ### 1.3 Search Index Implementation
 - [X] Design indexing strategy for markdown documentation
