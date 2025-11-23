@@ -1,5 +1,16 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { LanceDBSearch } from '../search/lancedb-search.js';
+
+let searchInstance: LanceDBSearch | null = null;
+
+async function getSearchInstance(): Promise<LanceDBSearch> {
+  if (!searchInstance) {
+    searchInstance = new LanceDBSearch();
+    await searchInstance.initialize();
+  }
+  return searchInstance;
+}
 
 export function setupHandlers(server: McpServer): void {
   registerSearchDocsTool(server);
@@ -25,18 +36,60 @@ function registerSearchDocsTool(server: McpServer): void {
       },
     },
     async ({ query, category, limit = 5 }) => {
-      // TODO: Implement actual search logic
-      const result = {
-        message: 'Search functionality not yet implemented',
-        query,
-        category,
-        limit,
-        results: [],
-      };
+      try {
+        const search = await getSearchInstance();
+        const options = category ? { category, limit } : { limit };
+        const results = await search.search(query, options);
 
-      return {
-        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-      };
+        if (results.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `No results found for "${query}". Try different search terms or check if the documentation has been indexed.`,
+              },
+            ],
+          };
+        }
+
+        // Format results for better readability
+        const formattedResults = results.map((result, index) => ({
+          rank: index + 1,
+          title: result.title,
+          description: result.description,
+          url: result.url,
+          category: result.category,
+          relevance: (result.score * 100).toFixed(1) + '%',
+          snippet: result.content,
+          keywords: result.keywords,
+        }));
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  query,
+                  totalResults: results.length,
+                  results: formattedResults,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error searching documentation: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
     }
   );
 }
@@ -51,15 +104,68 @@ function registerGetDocTool(server: McpServer): void {
       },
     },
     async ({ path }) => {
-      // TODO: Implement actual document retrieval
-      const result = {
-        message: 'Document retrieval not yet implemented',
-        path,
-      };
+      try {
+        const search = await getSearchInstance();
+        const document = await search.getDocumentByPath(path);
 
-      return {
-        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-      };
+        if (!document) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Document not found: ${path}. The path may be incorrect or the documentation has not been indexed.`,
+              },
+            ],
+          };
+        }
+
+        // Parse stringified fields back to arrays
+        const breadcrumbs = document.breadcrumbs
+          ? document.breadcrumbs.split(' > ').filter(Boolean)
+          : [];
+        const headings = document.headings
+          ? document.headings.split(' | ').filter(Boolean)
+          : [];
+        const keywords = document.keywords
+          ? document.keywords.split(', ').filter(Boolean)
+          : [];
+        const playgroundIds = document.playgroundIds
+          ? document.playgroundIds.split(', ').filter(Boolean)
+          : [];
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  title: document.title,
+                  description: document.description,
+                  url: document.url,
+                  category: document.category,
+                  breadcrumbs,
+                  content: document.content,
+                  headings,
+                  keywords,
+                  playgroundIds,
+                  lastModified: document.lastModified,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error retrieving document: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
     }
   );
 }
