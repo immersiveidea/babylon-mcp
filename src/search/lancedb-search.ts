@@ -197,10 +197,16 @@ export class LanceDBSearch {
   }
 
   private pathToDocId(filePath: string): string {
-    return filePath
-      .replace(/^.*\/content\//, '')
-      .replace(/\.md$/, '')
-      .replace(/\//g, '_');
+    // Remove .md extension if present
+    let normalizedPath = filePath.replace(/\.md$/, '');
+
+    // If path already starts with content/, strip everything before it
+    normalizedPath = normalizedPath.replace(/^.*\/content\//, '');
+
+    // If path doesn't have content/ prefix, assume it's relative to content/
+    // and prepend Documentation_content_ to match indexing
+    const pathWithUnderscores = normalizedPath.replace(/\//g, '_');
+    return `Documentation_content_${pathWithUnderscores}`;
   }
 
   async searchSourceCode(
