@@ -1,3 +1,9 @@
+// MUST set environment variable before any imports that use @xenova/transformers
+// This prevents onnxruntime-node from being loaded on Alpine Linux (musl libc)
+if (process.env.TRANSFORMERS_BACKEND === 'wasm' || process.env.TRANSFORMERS_BACKEND === 'onnxruntime-web') {
+  process.env.ONNXRUNTIME_BACKEND = 'wasm';
+}
+
 import { SourceCodeIndexer } from '../src/search/source-code-indexer.js';
 
 async function main() {
