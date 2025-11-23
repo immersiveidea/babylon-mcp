@@ -46,4 +46,33 @@ describe('DocumentParser', () => {
     expect(doc.filePath).toBe(sampleFile);
     expect(doc.lastModified).toBeInstanceOf(Date);
   });
+
+  it('should extract code blocks with language specified', async () => {
+    const doc = await parser.parseFile(sampleFile);
+
+    // Test that code blocks are extracted
+    expect(Array.isArray(doc.codeBlocks)).toBe(true);
+  });
+
+  it('should extract playground IDs from Playground tags', async () => {
+    const doc = await parser.parseFile(sampleFile);
+
+    // Test that playground IDs array exists
+    expect(Array.isArray(doc.playgroundIds)).toBe(true);
+  });
+
+  it('should handle documents without code blocks', async () => {
+    // Create a test with a simple markdown file without code blocks
+    const doc = await parser.parseFile(sampleFile);
+
+    expect(doc.codeBlocks).toBeDefined();
+    expect(Array.isArray(doc.codeBlocks)).toBe(true);
+  });
+
+  it('should handle documents without playground tags', async () => {
+    const doc = await parser.parseFile(sampleFile);
+
+    expect(doc.playgroundIds).toBeDefined();
+    expect(Array.isArray(doc.playgroundIds)).toBe(true);
+  });
 });

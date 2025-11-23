@@ -2,6 +2,7 @@ import { connect } from '@lancedb/lancedb';
 import { pipeline } from '@xenova/transformers';
 import type { SearchOptions, SearchResult } from './types.js';
 import type { EmbeddedDocument } from './lancedb-indexer.js';
+import type { EmbeddedApiDoc } from './api-indexer.js';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -56,6 +57,29 @@ export class LanceDBSearch {
       category: doc.category,
       score: doc._distance ? 1 - doc._distance : 0, // Convert distance to similarity score
       keywords: doc.keywords.split(', ').filter(Boolean),
+    }));
+  }
+
+  async searchApi(query: string, options: { limit?: number } = {}): Promise<Array<EmbeddedApiDoc & { score: number }>> {
+    if (!this.db || !this.embedder) {
+      throw new Error('Search not initialized. Call initialize() first.');
+    }
+
+    const limit = options.limit || 5;
+    const queryVector = await this.generateEmbedding(query);
+
+    // Open the API table (use babylon_api for production, babylon_api_test for testing)
+    const apiTable = await this.db.openTable('babylon_api');
+
+    // Perform vector search
+    const results = await apiTable
+      .vectorSearch(queryVector)
+      .limit(limit)
+      .toArray();
+
+    return results.map((doc: any) => ({
+      ...doc,
+      score: doc._distance ? 1 - doc._distance : 0, // Convert distance to similarity score
     }));
   }
 

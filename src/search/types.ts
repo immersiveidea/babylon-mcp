@@ -45,3 +45,32 @@ export interface SearchResult {
   score: number;
   keywords: string[];
 }
+
+export interface ApiDocumentation {
+  name: string;
+  fullName: string;
+  kind: string;
+  summary: string;
+  description: string;
+  examples: string[];
+  parameters: ApiParameter[];
+  returns?: ApiReturn | undefined;
+  type?: string | undefined;
+  deprecated?: string | undefined;
+  see: string[];
+  since?: string | undefined;
+  sourceFile: string;
+  sourceLine: number;
+}
+
+export interface ApiParameter {
+  name: string;
+  type: string;
+  description: string;
+  optional: boolean;
+}
+
+export interface ApiReturn {
+  type: string;
+  description: string;
+}

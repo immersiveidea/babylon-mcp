@@ -15,6 +15,7 @@ async function getSearchInstance(): Promise<LanceDBSearch> {
 export function setupHandlers(server: McpServer): void {
   registerSearchDocsTool(server);
   registerGetDocTool(server);
+  registerSearchApiTool(server);
 }
 
 function registerSearchDocsTool(server: McpServer): void {
@@ -162,6 +163,83 @@ function registerGetDocTool(server: McpServer): void {
             {
               type: 'text',
               text: `Error retrieving document: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
+    }
+  );
+}
+
+function registerSearchApiTool(server: McpServer): void {
+  server.registerTool(
+    'search_babylon_api',
+    {
+      description: 'Search Babylon.js API documentation (classes, methods, properties)',
+      inputSchema: {
+        query: z.string().describe('Search query for Babylon.js API (e.g., "getMeshByName", "Vector3", "Scene")'),
+        limit: z.number().optional().default(5).describe('Maximum number of results to return (default: 5)'),
+      },
+    },
+    async ({ query, limit = 5 }) => {
+      try {
+        const search = await getSearchInstance();
+        const results = await search.searchApi(query, { limit });
+
+        if (results.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `No API documentation found for "${query}". Try different search terms or check if the API has been indexed.`,
+              },
+            ],
+          };
+        }
+
+        // Format results for better readability
+        const formattedResults = results.map((result, index) => ({
+          rank: index + 1,
+          name: result.name,
+          fullName: result.fullName,
+          kind: result.kind,
+          summary: result.summary,
+          description: result.description,
+          parameters: result.parameters ? JSON.parse(result.parameters) : [],
+          returns: result.returns ? JSON.parse(result.returns) : null,
+          type: result.type,
+          examples: result.examples,
+          deprecated: result.deprecated,
+          see: result.see,
+          since: result.since,
+          sourceFile: result.sourceFile,
+          sourceLine: result.sourceLine,
+          url: result.url,
+          relevance: (result.score * 100).toFixed(1) + '%',
+        }));
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  query,
+                  totalResults: results.length,
+                  results: formattedResults,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error searching API documentation: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
         };

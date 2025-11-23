@@ -13,7 +13,8 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "index-docs": "tsx scripts/index-docs.ts"
+    "index-docs": "tsx scripts/index-docs.ts",
+    "index-api": "tsx scripts/index-api.ts"
   },
   "keywords": [],
   "author": "",
@@ -37,6 +38,7 @@
     "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
+    "typedoc": "^0.28.14",
     "typescript": "^5.9.3",
     "vitest": "^4.0.13"
   }
