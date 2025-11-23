@@ -97,16 +97,35 @@ npm start
 
 The server runs on **port 4000** by default.
 
-## Integration with Claude Desktop
+## Integration with AI Assistants
+
+The Babylon MCP server uses HTTP transport and must be running before connecting AI assistants.
+
+### Starting the Server
+
+First, start the MCP server:
+
+```bash
+# Development mode with hot reload
+npm run dev
+
+# OR production mode
+npm start
+```
+
+The server runs on **http://localhost:4000** by default.
+
+### Claude Desktop Configuration
 
 To use this MCP server with Claude Desktop, add it to your Claude configuration file.
 
-### Configuration File Location
+#### Configuration File Location
 
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-### Configuration
+#### Configuration
 
 Add the following to your `claude_desktop_config.json`:
 
@@ -114,21 +133,50 @@ Add the following to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "babylon-mcp": {
-      "command": "node",
-      "args": [
-        "/absolute/path/to/babylon-mcp/dist/mcp/index.js"
-      ],
-      "env": {}
+      "url": "http://localhost:4000/mcp"
     }
   }
 }
 ```
 
-Replace `/absolute/path/to/babylon-mcp` with the actual path to your babylon-mcp directory.
-
-### Restart Claude Desktop
+#### Restart Claude Desktop
 
 After updating the configuration, restart Claude Desktop for the changes to take effect.
+
+### Claude Code CLI Configuration
+
+To use this MCP server with Claude Code (command line), add it to your Claude Code configuration file.
+
+#### Configuration File Location
+
+- **macOS/Linux**: `~/.claude/config.json`
+- **Windows**: `%USERPROFILE%\.claude\config.json`
+
+#### Configuration
+
+Add the following to your `config.json`:
+
+```json
+{
+  "mcpServers": {
+    "babylon-mcp": {
+      "url": "http://localhost:4000/mcp"
+    }
+  }
+}
+```
+
+#### Usage
+
+After configuration, you can use the `/mcp` command in Claude Code to interact with the server:
+
+```bash
+# Connect to the MCP server
+/mcp babylon-mcp
+
+# Use the tools
+Search for "Vector3" in Babylon.js documentation
+```
 
 ## Available MCP Tools
 
@@ -284,10 +332,12 @@ npm run index:all
 - Check disk space (~2GB required)
 - Try indexing components individually to isolate the issue
 
-### Claude Desktop doesn't see the tools
-- Verify the path in `claude_desktop_config.json` is absolute
-- Restart Claude Desktop after configuration changes
-- Check that the server builds without errors: `npm run build`
+### Claude doesn't see the tools
+- **Ensure the server is running**: `npm run dev` or `npm start`
+- **Verify server is accessible**: `curl http://localhost:4000/health` should return `{"status":"healthy"...}`
+- **Check configuration**: Ensure `~/.claude/config.json` or Claude Desktop config has the correct URL
+- **Restart Claude**: Restart Claude Desktop or Claude Code after configuration changes
+- **Check server logs**: Look for connection attempts in the server output
 
 ### Search returns no results
 - Ensure indexing has completed successfully
