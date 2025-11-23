@@ -13,8 +13,13 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "index-docs": "tsx scripts/index-docs.ts",
-    "index-api": "tsx scripts/index-api.ts"
+    "index:docs": "tsx scripts/index-docs.ts",
+    "index:api": "tsx scripts/index-api.ts",
+    "index:source": "tsx scripts/index-source.ts",
+    "index:all": "npm run index:docs && npm run index:api && npm run index:source",
+    "index-docs": "npm run index:docs",
+    "index-api": "npm run index:api",
+    "index-source": "npm run index:source"
   },
   "keywords": [],
   "author": "",

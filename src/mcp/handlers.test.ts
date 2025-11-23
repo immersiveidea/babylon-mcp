@@ -17,7 +17,7 @@ describe('MCP Handlers', () => {
     it('should register all required tools', () => {
       setupHandlers(mockServer);
 
-      expect(registerToolSpy).toHaveBeenCalledTimes(3);
+      expect(registerToolSpy).toHaveBeenCalledTimes(5);
     });
 
     it('should register search_babylon_docs tool', () => {

@@ -16,6 +16,8 @@ export function setupHandlers(server: McpServer): void {
   registerSearchDocsTool(server);
   registerGetDocTool(server);
   registerSearchApiTool(server);
+  registerSearchSourceTool(server);
+  registerGetSourceTool(server);
 }
 
 function registerSearchDocsTool(server: McpServer): void {
@@ -240,6 +242,152 @@ function registerSearchApiTool(server: McpServer): void {
             {
               type: 'text',
               text: `Error searching API documentation: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
+    }
+  );
+}
+
+function registerSearchSourceTool(server: McpServer): void {
+  server.registerTool(
+    'search_babylon_source',
+    {
+      description: 'Search Babylon.js source code files',
+      inputSchema: {
+        query: z.string().describe('Search query for source code (e.g., "getMeshByName implementation", "scene rendering")'),
+        package: z
+          .string()
+          .optional()
+          .describe('Optional package filter (e.g., "core", "gui", "materials")'),
+        limit: z
+          .number()
+          .optional()
+          .default(5)
+          .describe('Maximum number of results to return (default: 5)'),
+      },
+    },
+    async ({ query, package: packageFilter, limit = 5 }) => {
+      try {
+        const search = await getSearchInstance();
+        const options = packageFilter ? { package: packageFilter, limit } : { limit };
+        const results = await search.searchSourceCode(query, options);
+
+        if (results.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `No source code found for "${query}". Try different search terms or check if the source code has been indexed.`,
+              },
+            ],
+          };
+        }
+
+        // Format results for better readability
+        const formattedResults = results.map((result, index) => ({
+          rank: index + 1,
+          filePath: result.filePath,
+          package: result.package,
+          startLine: result.startLine,
+          endLine: result.endLine,
+          language: result.language,
+          codeSnippet: result.content.substring(0, 500) + (result.content.length > 500 ? '...' : ''),
+          imports: result.imports,
+          exports: result.exports,
+          url: result.url,
+          relevance: (result.score * 100).toFixed(1) + '%',
+        }));
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  query,
+                  totalResults: results.length,
+                  results: formattedResults,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error searching source code: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
+    }
+  );
+}
+
+function registerGetSourceTool(server: McpServer): void {
+  server.registerTool(
+    'get_babylon_source',
+    {
+      description: 'Retrieve full Babylon.js source code file or specific line range',
+      inputSchema: {
+        filePath: z.string().describe('Relative file path from repository root (e.g., "packages/dev/core/src/scene.ts")'),
+        startLine: z
+          .number()
+          .optional()
+          .describe('Optional start line number (1-indexed)'),
+        endLine: z
+          .number()
+          .optional()
+          .describe('Optional end line number (1-indexed)'),
+      },
+    },
+    async ({ filePath, startLine, endLine }) => {
+      try {
+        const search = await getSearchInstance();
+        const sourceCode = await search.getSourceFile(filePath, startLine, endLine);
+
+        if (!sourceCode) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Source file not found: ${filePath}. The path may be incorrect or the file does not exist in the repository.`,
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  filePath,
+                  startLine: startLine || 1,
+                  endLine: endLine || sourceCode.split('\n').length,
+                  totalLines: sourceCode.split('\n').length,
+                  language: filePath.endsWith('.ts') || filePath.endsWith('.tsx') ? 'typescript' : 'javascript',
+                  content: sourceCode,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error retrieving source file: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
         };

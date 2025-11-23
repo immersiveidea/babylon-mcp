@@ -53,7 +53,7 @@ vi.mock('@lancedb/lancedb', () => ({
 }));
 
 vi.mock('@xenova/transformers', () => ({
-  pipeline: vi.fn(() => Promise.resolve((text: string) => ({
+  pipeline: vi.fn(() => Promise.resolve((_text: string) => ({
     data: new Float32Array([0.1, 0.2, 0.3]),
   }))),
 }));

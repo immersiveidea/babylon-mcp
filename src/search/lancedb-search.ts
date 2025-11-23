@@ -203,6 +203,52 @@ export class LanceDBSearch {
       .replace(/\//g, '_');
   }
 
+  async searchSourceCode(
+    query: string,
+    options: { package?: string; limit?: number; tableName?: string } = {}
+  ): Promise<Array<any & { score: number }>> {
+    if (!this.db || !this.embedder) {
+      throw new Error('Search not initialized');
+    }
+
+    const limit = options.limit || 5;
+    const tableName = options.tableName || 'babylon_source_code';
+    const queryVector = await this.generateEmbedding(query);
+
+    const sourceTable = await this.db.openTable(tableName);
+    let searchQuery = sourceTable.vectorSearch(queryVector).limit(limit);
+
+    if (options.package) {
+      searchQuery = searchQuery.where(`package = '${options.package}'`);
+    }
+
+    const results = await searchQuery.toArray();
+    return results.map((doc: any) => ({
+      ...doc,
+      score: doc._distance ? Math.max(0, 1 - doc._distance) : 0,
+    }));
+  }
+
+  async getSourceFile(
+    filePath: string,
+    startLine?: number,
+    endLine?: number
+  ): Promise<string | null> {
+    try {
+      const fullPath = path.join('./data/repositories/Babylon.js', filePath);
+      const content = await fs.readFile(fullPath, 'utf-8');
+
+      if (startLine !== undefined && endLine !== undefined) {
+        const lines = content.split('\n');
+        return lines.slice(startLine - 1, endLine).join('\n');
+      }
+      return content;
+    } catch (error) {
+      console.error(`Error reading source file ${filePath}:`, error);
+      return null;
+    }
+  }
+
   async close(): Promise<void> {
     // LanceDB doesn't require explicit closing
   }
