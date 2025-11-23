@@ -58,6 +58,17 @@ export class LanceDBIndexer {
     console.log('Initializing LanceDB connection...');
     this.db = await connect(this.dbPath);
 
+    // Configure ONNX Runtime backend based on environment variable
+    // TRANSFORMERS_BACKEND=wasm for Alpine Linux (musl libc)
+    // Default: native ONNX Runtime (faster, requires glibc)
+    const backend = process.env.TRANSFORMERS_BACKEND;
+    if (backend === 'wasm' || backend === 'onnxruntime-web') {
+      console.log('Using WASM backend for Transformers.js (Alpine/musl compatibility mode)');
+      process.env.ONNXRUNTIME_BACKEND = 'wasm';
+    } else {
+      console.log('Using native ONNX Runtime backend (glibc required)');
+    }
+
     console.log('Loading embedding model (this may take a moment)...');
     this.embedder = await pipeline(
       'feature-extraction',
