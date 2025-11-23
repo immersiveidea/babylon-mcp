@@ -58,9 +58,22 @@ This removes the incompatible `onnxruntime-node` native module and configures th
 
 ## Initial Setup
 
-Before using the MCP server, you need to index the Babylon.js repositories. This is a one-time setup process.
+Before using the MCP server, you need to clone the Babylon.js repositories and index them. This is a one-time setup process.
 
-### Index All Data (Recommended)
+### Step 1: Clone Repositories
+
+Clone the required Babylon.js repositories:
+
+```bash
+npm run clone:repos
+```
+
+This will clone:
+- BabylonJS/Documentation (documentation site content)
+- BabylonJS/Babylon.js (main framework source)
+- BabylonJS/havok (physics engine)
+
+### Step 2: Index All Data (Recommended)
 
 Run the master indexing script to index documentation, API, and source code:
 
@@ -69,10 +82,9 @@ npm run index:all
 ```
 
 This will:
-1. Clone the required repositories (Documentation, Babylon.js, havok)
-2. Index all documentation files (~5-10 minutes)
-3. Index API documentation from TypeScript source (~10-15 minutes)
-4. Index source code from core packages (~15-20 minutes)
+1. Index all documentation files (~5-10 minutes)
+2. Index API documentation from TypeScript source (~10-15 minutes)
+3. Index source code from core packages (~15-20 minutes)
 
 Total indexing time: **30-45 minutes** depending on your system.
 

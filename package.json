@@ -14,6 +14,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "alpine:setup": "sh scripts/alpine-setup.sh",
+    "clone:repos": "tsx scripts/clone-repos.ts",
     "index:docs": "tsx scripts/index-docs.ts",
     "index:api": "tsx scripts/index-api.ts",
     "index:source": "tsx scripts/index-source.ts",
