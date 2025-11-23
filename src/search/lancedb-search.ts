@@ -200,13 +200,14 @@ export class LanceDBSearch {
     // Remove .md extension if present
     let normalizedPath = filePath.replace(/\.md$/, '');
 
-    // If path already starts with content/, strip everything before it
+    // Strip any leading path up to and including /content/
+    // This handles both full paths and relative paths
     normalizedPath = normalizedPath.replace(/^.*\/content\//, '');
 
-    // If path doesn't have content/ prefix, assume it's relative to content/
-    // and prepend Documentation_content_ to match indexing
+    // Convert slashes to underscores and prepend source name
+    // Note: source name is "documentation" (lowercase) as defined in index-docs.ts
     const pathWithUnderscores = normalizedPath.replace(/\//g, '_');
-    return `Documentation_content_${pathWithUnderscores}`;
+    return `documentation_${pathWithUnderscores}`;
   }
 
   async searchSourceCode(
