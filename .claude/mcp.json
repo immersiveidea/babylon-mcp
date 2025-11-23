@@ -1,0 +1,8 @@
+ {
+    "mcpServers": {
+      "babylon-mcp": {
+        "command": "npx",
+        "args": ["mcp-proxy", "http://localhost:4000/mcp"]
+      }
+    }
+  }
