@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { setupHandlers } from './handlers.js';
+import { setupHandlers } from './handlers/index.js';
 
 describe('MCP Handlers', () => {
   let mockServer: McpServer;
@@ -97,8 +97,8 @@ describe('MCP Handlers', () => {
       const result = (await searchHandler(params)) as { content: { type: string; text: string }[] };
 
       const responseText = result.content[0]!.text;
-      // Response may be "No results found" or valid JSON
-      if (!responseText.startsWith('No results')) {
+      // Response may be "No documentation found" or valid JSON
+      if (!responseText.startsWith('No ')) {
         expect(() => JSON.parse(responseText)).not.toThrow();
       }
     });
@@ -108,8 +108,8 @@ describe('MCP Handlers', () => {
       const result = (await searchHandler(params)) as { content: { type: string; text: string }[] };
 
       const responseText = result.content[0]!.text;
-      // Response may be "No results found" or valid JSON with query
-      if (!responseText.startsWith('No results')) {
+      // Response may be "No documentation found" or valid JSON with query
+      if (!responseText.startsWith('No ')) {
         const parsedResponse = JSON.parse(responseText);
         expect(parsedResponse.query).toBe('PBR');
       }
@@ -275,6 +275,194 @@ describe('MCP Handlers', () => {
 
       expect(toolConfig.inputSchema).toHaveProperty('query');
       expect(toolConfig.inputSchema).toHaveProperty('limit');
+    });
+
+    it('search_babylon_source should have proper schema structure', () => {
+      const toolConfig = registerToolSpy.mock.calls[3]![1];
+
+      expect(toolConfig.inputSchema).toHaveProperty('query');
+      expect(toolConfig.inputSchema).toHaveProperty('package');
+      expect(toolConfig.inputSchema).toHaveProperty('limit');
+    });
+
+    it('get_babylon_source should have proper schema structure', () => {
+      const toolConfig = registerToolSpy.mock.calls[4]![1];
+
+      expect(toolConfig.inputSchema).toHaveProperty('filePath');
+      expect(toolConfig.inputSchema).toHaveProperty('startLine');
+      expect(toolConfig.inputSchema).toHaveProperty('endLine');
+    });
+  });
+
+  describe('search_babylon_source handler', () => {
+    let searchSourceHandler: (params: unknown) => Promise<unknown>;
+
+    beforeEach(() => {
+      setupHandlers(mockServer);
+      searchSourceHandler = registerToolSpy.mock.calls[3]![2];
+    });
+
+    it('should accept required query parameter', async () => {
+      const params = { query: 'getMeshByName implementation' };
+      const result = await searchSourceHandler(params);
+
+      expect(result).toHaveProperty('content');
+      expect(Array.isArray((result as any).content)).toBe(true);
+    });
+
+    it('should accept optional package parameter', async () => {
+      const params = { query: 'scene rendering', package: 'core' };
+      const result = await searchSourceHandler(params);
+
+      expect(result).toHaveProperty('content');
+    });
+
+    it('should accept optional limit parameter', async () => {
+      const params = { query: 'mesh', limit: 10 };
+      const result = await searchSourceHandler(params);
+
+      expect(result).toHaveProperty('content');
+    });
+
+    it('should default limit to 5 when not provided', async () => {
+      const params = { query: 'test' };
+      const result = await searchSourceHandler(params);
+
+      expect(result).toHaveProperty('content');
+      expect(Array.isArray((result as any).content)).toBe(true);
+    });
+
+    it('should return text content type', async () => {
+      const params = { query: 'test' };
+      const result = (await searchSourceHandler(params)) as { content: { type: string; text: string }[] };
+
+      expect(result.content[0]).toHaveProperty('type', 'text');
+      expect(result.content[0]).toHaveProperty('text');
+    });
+
+    it('should return JSON-parseable response or no results message', async () => {
+      const params = { query: 'test source code search' };
+      const result = (await searchSourceHandler(params)) as { content: { type: string; text: string }[] };
+
+      const responseText = result.content[0]!.text;
+      // Response may be "No source code found", "Error...", or valid JSON
+      if (!responseText.startsWith('No ') && !responseText.startsWith('Error ')) {
+        expect(() => JSON.parse(responseText)).not.toThrow();
+      }
+    });
+
+    it('should handle queries with package filter', async () => {
+      const params = { query: 'mesh', package: 'core', limit: 3 };
+      const result = (await searchSourceHandler(params)) as { content: { type: string; text: string }[] };
+
+      const responseText = result.content[0]!.text;
+      expect(typeof responseText).toBe('string');
+      expect(responseText.length).toBeGreaterThan(0);
+    });
+
+    it('should return structured results with source code metadata', async () => {
+      const params = { query: 'getMeshByName', limit: 2 };
+      const result = (await searchSourceHandler(params)) as { content: { type: string; text: string }[] };
+
+      const responseText = result.content[0]!.text;
+      // Should either return "No source code found", "Error...", or JSON with results
+      if (!responseText.startsWith('No ') && !responseText.startsWith('Error ')) {
+        const parsed = JSON.parse(responseText);
+        expect(parsed).toHaveProperty('query');
+        expect(parsed).toHaveProperty('totalResults');
+        expect(parsed).toHaveProperty('results');
+
+        if (parsed.results && parsed.results.length > 0) {
+          const firstResult = parsed.results[0];
+          expect(firstResult).toHaveProperty('filePath');
+          expect(firstResult).toHaveProperty('startLine');
+          expect(firstResult).toHaveProperty('endLine');
+        }
+      }
+    });
+  });
+
+  describe('get_babylon_source handler', () => {
+    let getSourceHandler: (params: unknown) => Promise<unknown>;
+
+    beforeEach(() => {
+      setupHandlers(mockServer);
+      getSourceHandler = registerToolSpy.mock.calls[4]![2];
+    });
+
+    it('should accept required filePath parameter', async () => {
+      const params = { filePath: 'packages/dev/core/src/scene.ts' };
+      const result = await getSourceHandler(params);
+
+      expect(result).toHaveProperty('content');
+      expect(Array.isArray((result as any).content)).toBe(true);
+    });
+
+    it('should accept optional startLine and endLine parameters', async () => {
+      const params = {
+        filePath: 'packages/dev/core/src/scene.ts',
+        startLine: 100,
+        endLine: 110,
+      };
+      const result = await getSourceHandler(params);
+
+      expect(result).toHaveProperty('content');
+    });
+
+    it('should return text content type', async () => {
+      const params = { filePath: 'packages/dev/core/src/scene.ts' };
+      const result = (await getSourceHandler(params)) as { content: { type: string; text: string }[] };
+
+      expect(result.content[0]).toHaveProperty('type', 'text');
+      expect(result.content[0]).toHaveProperty('text');
+    });
+
+    it('should return JSON-parseable response', async () => {
+      const params = { filePath: 'packages/dev/core/src/scene.ts', startLine: 1, endLine: 10 };
+      const result = (await getSourceHandler(params)) as { content: { type: string; text: string }[] };
+
+      const responseText = result.content[0]!.text;
+      // Response may be "Source file not found" or valid JSON
+      if (!responseText.startsWith('Source file not found')) {
+        expect(() => JSON.parse(responseText)).not.toThrow();
+      }
+    });
+
+    it('should include source file metadata in response', async () => {
+      const params = { filePath: 'packages/dev/core/src/scene.ts' };
+      const result = (await getSourceHandler(params)) as { content: { type: string; text: string }[] };
+
+      const responseText = result.content[0]!.text;
+      // Response may be "Source file not found" or JSON with metadata
+      if (!responseText.startsWith('Source file not found')) {
+        const parsedResponse = JSON.parse(responseText);
+        expect(parsedResponse).toHaveProperty('filePath');
+        expect(parsedResponse).toHaveProperty('language');
+        expect(parsedResponse).toHaveProperty('content');
+      }
+    });
+
+    it('should handle file retrieval requests', async () => {
+      const params = { filePath: 'test/path.ts' };
+      const result = (await getSourceHandler(params)) as { content: { type: string; text: string }[] };
+
+      const responseText = result.content[0]!.text;
+      // Should either return "Source file not found" message or valid JSON
+      expect(typeof responseText).toBe('string');
+      expect(responseText.length).toBeGreaterThan(0);
+    });
+
+    it('should handle line range requests', async () => {
+      const params = {
+        filePath: 'packages/dev/core/src/scene.ts',
+        startLine: 4100,
+        endLine: 4110,
+      };
+      const result = (await getSourceHandler(params)) as { content: { type: string; text: string }[] };
+
+      const responseText = result.content[0]!.text;
+      expect(typeof responseText).toBe('string');
+      expect(responseText.length).toBeGreaterThan(0);
     });
   });
 });

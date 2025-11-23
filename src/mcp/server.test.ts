@@ -19,12 +19,13 @@ vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => {
   const MockMcpServer = vi.fn(function () {
     return {
       close: vi.fn().mockResolvedValue(undefined),
+      registerTool: vi.fn(),
     };
   });
   return { McpServer: MockMcpServer };
 });
 
-vi.mock('./handlers.js', () => ({
+vi.mock('./handlers/index.js', () => ({
   setupHandlers: vi.fn(),
 }));
 
@@ -81,7 +82,7 @@ describe('BabylonMCPServer', () => {
     });
 
     it('should setup MCP handlers', async () => {
-      const { setupHandlers } = await import('./handlers.js');
+      const { setupHandlers } = await import('./handlers/index.js');
 
       server = new BabylonMCPServer();
 

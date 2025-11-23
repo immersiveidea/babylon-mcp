@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import express from 'express';
 import { MCP_SERVER_CONFIG } from './config.js';
-import { setupHandlers } from './handlers.js';
+import { setupHandlers } from './handlers/index.js';
 import { setupRoutes } from './routes.js';
 import { RepositoryManager } from './repository-manager.js';
 
