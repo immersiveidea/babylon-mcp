@@ -85,15 +85,15 @@ export class LanceDBIndexer {
     for (const source of this.sources) {
       console.log(`\nProcessing source: ${source.name}`);
       console.log(`Path: ${source.path}`);
-      console.log('Finding markdown files...');
+      console.log('Finding documentation files...');
 
-      const markdownFiles = await this.findMarkdownFiles(source.path);
-      console.log(`Found ${markdownFiles.length} markdown files in ${source.name}`);
+      const docFiles = await this.findDocumentationFiles(source.path);
+      console.log(`Found ${docFiles.length} files in ${source.name}`);
 
       console.log('Parsing and embedding documents...');
 
-      for (let i = 0; i < markdownFiles.length; i++) {
-        const filePath = markdownFiles[i];
+      for (let i = 0; i < docFiles.length; i++) {
+        const filePath = docFiles[i];
         if (!filePath) continue;
 
         try {
@@ -101,14 +101,14 @@ export class LanceDBIndexer {
           allDocuments.push(doc);
 
           if ((i + 1) % 50 === 0) {
-            console.log(`Processed ${i + 1}/${markdownFiles.length} documents from ${source.name}`);
+            console.log(`Processed ${i + 1}/${docFiles.length} documents from ${source.name}`);
           }
         } catch (error) {
           console.error(`Error processing ${filePath}:`, error);
         }
       }
 
-      console.log(`✓ Completed ${source.name}: ${markdownFiles.length} files processed`);
+      console.log(`✓ Completed ${source.name}: ${docFiles.length} files processed`);
     }
 
     console.log(`\nTotal documents processed: ${allDocuments.length}`);
@@ -126,7 +126,7 @@ export class LanceDBIndexer {
   }
 
   private async processDocument(filePath: string, source: DocumentSource): Promise<EmbeddedDocument> {
-    const metadata = await this.parser.parseFile(filePath);
+    const metadata = await this.parser.parseFile(filePath, source.urlPrefix);
     const embeddingText = this.createEmbeddingText(metadata);
     const vector = await this.generateEmbedding(embeddingText);
 
@@ -174,17 +174,20 @@ export class LanceDBIndexer {
     return Array.from(result.data);
   }
 
-  private async findMarkdownFiles(dir: string): Promise<string[]> {
+  private async findDocumentationFiles(dir: string): Promise<string[]> {
     const files: string[] = [];
     const entries = await fs.readdir(dir, { withFileTypes: true });
 
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
-        const subFiles = await this.findMarkdownFiles(fullPath);
+        const subFiles = await this.findDocumentationFiles(fullPath);
         files.push(...subFiles);
-      } else if (entry.isFile() && entry.name.endsWith('.md')) {
-        files.push(fullPath);
+      } else if (entry.isFile()) {
+        // Include .md files and page.tsx files (Editor documentation)
+        if (entry.name.endsWith('.md') || entry.name === 'page.tsx') {
+          files.push(fullPath);
+        }
       }
     }
 
@@ -196,19 +199,26 @@ export class LanceDBIndexer {
     const relativePath = filePath
       .replace(new RegExp(`^.*${basePath.replace(/\//g, '\\/')}\\/`), '')
       .replace(/\.md$/i, '')
+      .replace(/\/page\.tsx$/i, '') // Remove /page.tsx for Editor docs
       .replace(/\//g, '_');
     return `${source.name}_${relativePath}`;
   }
 
   private generateDocUrl(metadata: DocumentMetadata, source: DocumentSource): string {
     const basePath = source.path;
-    const relativePath = metadata.filePath
+    let relativePath = metadata.filePath
       .replace(new RegExp(`^.*${basePath.replace(/\//g, '\\/')}\\/`), '')
-      .replace(/\.md$/i, '');
+      .replace(/\.md$/i, '')
+      .replace(/\/page\.tsx$/i, ''); // Remove /page.tsx for Editor docs
 
     // For source-repo, use GitHub URL; for documentation, use doc site
     if (source.name === 'source-repo') {
       return `https://github.com/BabylonJS/Babylon.js/blob/master/${relativePath}.md`;
+    }
+
+    // For editor-docs, construct proper URL
+    if (source.name === 'editor-docs') {
+      return `${source.urlPrefix}/${relativePath}`;
     }
 
     return `${source.urlPrefix}/${relativePath}`;

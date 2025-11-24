@@ -29,6 +29,11 @@ async function main() {
       path: path.join(projectRoot, 'data', 'repositories', 'Babylon.js'),
       urlPrefix: 'https://github.com/BabylonJS/Babylon.js/blob/master',
     },
+    {
+      name: 'editor-docs',
+      path: path.join(projectRoot, 'data', 'repositories', 'Editor', 'website', 'src', 'app', 'documentation'),
+      urlPrefix: 'https://editor.babylonjs.com/documentation',
+    },
   ];
 
   console.log('Starting Babylon.js documentation indexing...');

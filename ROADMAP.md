@@ -1,13 +1,33 @@
 # Babylon MCP Server - Development Roadmap
 
 ## Vision
-Build an MCP (Model Context Protocol) server that helps developers working with Babylon.js by providing intelligent documentation search and sandbox examples. The MCP server serves as a canonical, token-efficient source for Babylon.js framework information when using AI agents, while incorporating community feedback to continuously improve search relevance.
+Build an MCP (Model Context Protocol) server that helps developers working with Babylon.js and the Babylon.js Editor by providing intelligent documentation search and sandbox examples. The MCP server serves as a canonical, token-efficient source for Babylon.js framework information and Editor tool workflows when using AI agents, while incorporating community feedback to continuously improve search relevance.
 
 ## Documentation Source
 - **Repository**: https://github.com/BabylonJS/Documentation.git
 - This is the authoritative source for all Babylon.js documentation
 
 ---
+
+## Recent Progress (2025-01-24)
+
+**Editor Documentation Integration - COMPLETED** ✅
+
+Successfully integrated Babylon.js Editor documentation using TypeScript Compiler API:
+- ✅ Cloned Editor repository independently (751 MB, 13 documentation pages)
+- ✅ Created TSX parser using TypeScript Compiler API (zero new dependencies)
+- ✅ Extended DocumentParser to handle both .md and .tsx files
+- ✅ Updated LanceDB indexer to discover and process page.tsx files
+- ✅ Added editor-docs source to indexing pipeline
+- ✅ Tested search functionality with Editor-specific queries
+- ✅ **Total indexed: 902 documents** (745 docs + 144 source + 13 editor)
+
+**Key Implementation Details:**
+- TSX Parser: Uses TypeScript AST traversal to extract text from React components
+- File location: `src/search/tsx-parser.ts`
+- Filters out className values, imports, and non-content text
+- Extracts headings, code blocks, and documentation content
+- Search results now include Editor workflows and APIs
 
 ## Recent Progress (2025-01-23)
 
@@ -46,10 +66,10 @@ Successfully implemented vector search with local embeddings:
 - [X] Implement automated git pull mechanism for updates
 - [X] Parse documentation file structure (markdown files, code examples)
 - [X] Extract metadata from documentation files (titles, categories, versions)
-- [I] Index Babylon.js source repository markdown files (Option 3 - Hybrid Approach, Phase 1)
-  - [I] Add 144 markdown files from Babylon.js/Babylon.js repository
-  - [I] Include: CHANGELOG.md, package READMEs, contributing guides
-  - [ ] Phase 2: Evaluate TypeDoc integration for API reference
+- [X] Index Babylon.js source repository markdown files (Option 3 - Hybrid Approach, Phase 1)
+  - [X] Add 144 markdown files from Babylon.js/Babylon.js repository
+  - [X] Include: CHANGELOG.md, package READMEs, contributing guides
+  - [X] Phase 2: Evaluate TypeDoc integration for API reference
 - [ ] Create documentation change detection system
 - [ ] Research and fix Claude Code config file integration issue
   - CLI `/mcp http://localhost:4000/mcp` works
@@ -77,6 +97,60 @@ Successfully implemented vector search with local embeddings:
   - Output: full documentation content optimized for AI consumption
 - [X] Format content to minimize token usage while preserving clarity
 - [X] Include related documentation links in results
+
+### 1.6 Babylon Editor Integration ✅ **COMPLETED**
+**Goal**: Expand MCP server scope to support Babylon.js Editor tool usage and workflows
+
+#### Phase 1: Repository Setup & Exploration ✅ **COMPLETED**
+- [X] Clone https://github.com/BabylonJS/Editor.git independently (shallow clone)
+  - Location: data/repositories/Editor/
+  - Branch: master (note: uses 'master' not 'main')
+  - Independent from BabylonJS/Babylon.js (uses npm packages)
+- [X] Inspect repository structure and document findings:
+  - Documentation in `/website/src/app/documentation/` as Next.js **page.tsx files** (not markdown)
+  - Found 13 documentation pages (page.tsx files)
+  - Repository size: 751 MB (includes Electron build artifacts)
+  - Documentation site built with Next.js, content embedded in TSX components
+- [X] Catalog documentation types found:
+  - Editor tool usage guides (creating project, composing scene, managing assets)
+  - Editor-specific APIs (babylonjs-editor-tools decorators: @nodeFromScene, etc.)
+  - Script lifecycle documentation (onStart, onUpdate, onStop)
+  - Project templates (Next.js, SolidJS, Vanilla.js) in `/templates`
+  - Advanced features (texture compression, LOD, shadow optimization)
+
+#### Phase 2: Indexing Strategy Decision ✅ **COMPLETED**
+- [X] Evaluate documentation value for MCP users:
+  - Quantity: 13 documentation pages (TSX format, not markdown)
+  - Quality: High relevance - covers Editor workflows and Editor-only APIs
+  - Overlap: Minimal - Editor docs are distinct from core framework docs
+  - Uniqueness: Very high - decorators, lifecycle methods, Editor UI workflows are Editor-only
+- [X] Choose indexing approach based on findings:
+  - **Selected: Option A (Modified)** - Parse TSX files using TypeScript Compiler API
+  - Decided against web scraping to maintain source-of-truth from repository
+  - Built custom TSX parser to extract text from React components
+  - Rationale: Zero dependencies (uses built-in TypeScript), accurate parsing, maintainable
+- [X] Document decision and rationale: Using TypeScript Compiler API for TSX parsing
+
+#### Phase 3: Implementation ✅ **COMPLETED**
+- [X] Update repository-config.ts with Editor repository configuration
+- [X] Create TSX parser using TypeScript Compiler API (`src/search/tsx-parser.ts`)
+- [X] Extend DocumentParser to handle both `.md` and `.tsx` files
+- [X] Add Editor content to indexing pipeline (`editor-docs` source)
+- [X] Update LanceDB indexer to discover and process `page.tsx` files
+- [X] Test search quality with Editor-related queries - **Results: Working perfectly!**
+  - Tested queries: "onStart", "@nodeFromScene", "attaching scripts", "creating project"
+  - Editor docs appear in search results alongside core docs
+  - **Total indexed: 902 documents** (745 docs + 144 source + 13 editor)
+
+#### Phase 4: Editor-Specific MCP Tools (If valuable after Phase 3)
+- [ ] `search_babylon_editor_docs` - Search Editor documentation
+  - Input: query, category (workflow/scripting/assets/troubleshooting)
+  - Output: Ranked Editor-specific results
+- [ ] `get_babylon_editor_doc` - Retrieve full Editor documentation pages
+- [ ] `search_babylon_editor_api` - Search Editor APIs (decorators, lifecycle)
+- [ ] `get_babylon_template` - Retrieve project template files
+- [ ] Modify existing tools to support `source` parameter: "core" | "editor" | "both"
+
 
 ---
 

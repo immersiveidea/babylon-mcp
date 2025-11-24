@@ -1,6 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DocumentParser } from './document-parser.js';
 import path from 'path';
+import fs from 'fs/promises';
+import os from 'os';
 
 describe('DocumentParser', () => {
   const parser = new DocumentParser();
@@ -8,6 +10,19 @@ describe('DocumentParser', () => {
     process.cwd(),
     'data/repositories/Documentation/content/features.md'
   );
+
+  let tempDir: string;
+  let tempFile: string;
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'doc-parser-test-'));
+  });
+
+  afterEach(async () => {
+    if (tempDir) {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
+  });
 
   it('should parse YAML front matter', async () => {
     const doc = await parser.parseFile(sampleFile);
@@ -74,5 +89,108 @@ describe('DocumentParser', () => {
 
     expect(doc.playgroundIds).toBeDefined();
     expect(Array.isArray(doc.playgroundIds)).toBe(true);
+  });
+
+  describe('TSX file handling', () => {
+    it('should route .tsx files to TSX parser', async () => {
+      const tsxContent = `
+        export default function Page() {
+          return (
+            <div>
+              <div className="text-5xl">TSX Page Title</div>
+              <p>This is TSX content</p>
+            </div>
+          );
+        }
+      `;
+
+      tempFile = path.join(tempDir, 'documentation', 'test-page', 'page.tsx');
+      await fs.mkdir(path.dirname(tempFile), { recursive: true });
+      await fs.writeFile(tempFile, tsxContent);
+
+      const doc = await parser.parseFile(tempFile, 'https://editor.example.com');
+
+      // TSX parser correctly identifies it as editor content
+      expect(doc.title).toContain('TSX Page Title');
+      expect(doc.category).toBe('editor/test-page');
+      expect(doc.filePath).toBe(tempFile);
+    });
+
+    it('should extract category from TSX file path', async () => {
+      const tsxContent = `
+        export default function Page() {
+          return <div>Content</div>;
+        }
+      `;
+
+      tempFile = path.join(tempDir, 'documentation', 'adding-scripts', 'page.tsx');
+      await fs.mkdir(path.dirname(tempFile), { recursive: true });
+      await fs.writeFile(tempFile, tsxContent);
+
+      const doc = await parser.parseFile(tempFile, 'https://editor.example.com');
+
+      expect(doc.category).toBe('editor/adding-scripts');
+      expect(doc.breadcrumbs).toEqual(['editor', 'adding-scripts']);
+    });
+
+    it('should handle .md files with markdown parser', async () => {
+      const mdContent = `---
+title: Test Markdown
+description: Test description
+keywords: test, markdown
+---
+
+# Test Heading
+
+This is markdown content.`;
+
+      tempFile = path.join(tempDir, 'test.md');
+      await fs.writeFile(tempFile, mdContent);
+
+      const doc = await parser.parseFile(tempFile);
+
+      expect(doc.title).toBe('Test Markdown');
+      expect(doc.description).toBe('Test description');
+      expect(doc.keywords).toContain('test');
+    });
+
+    it('should pass urlPrefix to TSX parser', async () => {
+      const tsxContent = `
+        export default function Page() {
+          return <div>Test content</div>;
+        }
+      `;
+
+      tempFile = path.join(tempDir, 'documentation', 'page.tsx');
+      await fs.mkdir(path.dirname(tempFile), { recursive: true });
+      await fs.writeFile(tempFile, tsxContent);
+
+      const urlPrefix = 'https://custom.example.com';
+      const doc = await parser.parseFile(tempFile, urlPrefix);
+
+      expect(doc.filePath).toBe(tempFile);
+      expect(doc.lastModified).toBeInstanceOf(Date);
+    });
+
+    it('should distinguish between .tsx and .md based on file extension', async () => {
+      // Create both .tsx and .md files
+      const tsxContent = `export default function Page() { return <div>TSX</div>; }`;
+      const mdContent = `---\ntitle: MD File\n---\n# Markdown`;
+
+      const tsxFile = path.join(tempDir, 'test.tsx');
+      const mdFile = path.join(tempDir, 'test.md');
+
+      await fs.writeFile(tsxFile, tsxContent);
+      await fs.writeFile(mdFile, mdContent);
+
+      const tsxDoc = await parser.parseFile(tsxFile, 'https://example.com');
+      const mdDoc = await parser.parseFile(mdFile);
+
+      // TSX should have editor category
+      expect(tsxDoc.category).toContain('editor');
+
+      // MD should have standard category extraction
+      expect(mdDoc.title).toBe('MD File');
+    });
   });
 });

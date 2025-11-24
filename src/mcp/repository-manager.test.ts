@@ -177,7 +177,7 @@ describe('RepositoryManager', () => {
 
       const mockGitInstance = vi.mocked(simpleGit)({} as any);
 
-      expect(mockGitInstance.clone).toHaveBeenCalledTimes(3);
+      expect(mockGitInstance.clone).toHaveBeenCalledTimes(4);
 
       expect(mockGitInstance.clone).toHaveBeenCalledWith(
         'https://github.com/BabylonJS/Documentation.git',
@@ -194,6 +194,12 @@ describe('RepositoryManager', () => {
       expect(mockGitInstance.clone).toHaveBeenCalledWith(
         'https://github.com/BabylonJS/havok.git',
         expect.stringContaining('havok'),
+        expect.any(Array)
+      );
+
+      expect(mockGitInstance.clone).toHaveBeenCalledWith(
+        'https://github.com/BabylonJS/Editor.git',
+        expect.stringContaining('Editor'),
         expect.any(Array)
       );
     });
@@ -217,7 +223,7 @@ describe('RepositoryManager', () => {
 
       await manager.initializeAllRepositories();
 
-      expect(mockGitInstance.clone).toHaveBeenCalledTimes(3);
+      expect(mockGitInstance.clone).toHaveBeenCalledTimes(4);
       expect(consoleErrorSpy).toHaveBeenCalled();
 
       consoleErrorSpy.mockRestore();

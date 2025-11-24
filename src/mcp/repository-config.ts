@@ -21,4 +21,10 @@ export const BABYLON_REPOSITORIES: RepositoryConfig[] = [
     url: 'https://github.com/BabylonJS/havok.git',
     shallow: true,
   },
+  {
+    name: 'Editor',
+    url: 'https://github.com/BabylonJS/Editor.git',
+    shallow: true,
+    branch: 'master',
+  },
 ];

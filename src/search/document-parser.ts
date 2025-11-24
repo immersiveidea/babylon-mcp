@@ -1,9 +1,25 @@
 import matter from 'gray-matter';
 import fs from 'fs/promises';
+import path from 'path';
 import type { DocumentMetadata, Heading, CodeBlock } from './types.js';
+import { TsxParser } from './tsx-parser.js';
 
 export class DocumentParser {
-  async parseFile(filePath: string): Promise<DocumentMetadata> {
+  private tsxParser: TsxParser;
+
+  constructor() {
+    this.tsxParser = new TsxParser();
+  }
+
+  async parseFile(filePath: string, urlPrefix?: string): Promise<DocumentMetadata> {
+    const ext = path.extname(filePath).toLowerCase();
+
+    // Route to TSX parser for .tsx files
+    if (ext === '.tsx') {
+      return this.tsxParser.parseFile(filePath, urlPrefix || '');
+    }
+
+    // Default markdown parsing for .md files
     const content = await fs.readFile(filePath, 'utf-8');
     const { data, content: markdown } = matter(content);
 
