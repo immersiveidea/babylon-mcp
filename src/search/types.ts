@@ -42,6 +42,7 @@ export interface SearchResult {
   content: string;
   url: string;
   category: string;
+  source: string;
   score: number;
   keywords: string[];
 }

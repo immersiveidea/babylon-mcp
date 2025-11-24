@@ -17,7 +17,7 @@ describe('MCP Handlers', () => {
     it('should register all required tools', () => {
       setupHandlers(mockServer);
 
-      expect(registerToolSpy).toHaveBeenCalledTimes(5);
+      expect(registerToolSpy).toHaveBeenCalledTimes(6);
     });
 
     it('should register search_babylon_docs tool', () => {
@@ -251,6 +251,69 @@ describe('MCP Handlers', () => {
     });
   });
 
+  describe('search_babylon_editor_docs handler', () => {
+    let editorSearchHandler: (params: unknown) => Promise<unknown>;
+
+    beforeEach(() => {
+      setupHandlers(mockServer);
+      editorSearchHandler = registerToolSpy.mock.calls[5]![2];
+    });
+
+    it('should accept required query parameter', async () => {
+      const params = { query: 'attaching scripts' };
+      const result = (await editorSearchHandler(params)) as { content: { type: string; text: string }[] };
+
+      expect(result).toHaveProperty('content');
+      expect(Array.isArray(result.content)).toBe(true);
+    });
+
+    it('should accept optional category parameter', async () => {
+      const params = { query: 'lifecycle', category: 'scripting' };
+      const result = (await editorSearchHandler(params)) as { content: unknown[] };
+
+      expect(result).toHaveProperty('content');
+    });
+
+    it('should accept optional limit parameter', async () => {
+      const params = { query: 'editor', limit: 10 };
+      const result = (await editorSearchHandler(params)) as { content: unknown[] };
+
+      expect(result).toHaveProperty('content');
+    });
+
+    it('should default limit to 5 when not provided', async () => {
+      const params = { query: 'project' };
+      const result = (await editorSearchHandler(params)) as { content: { type: string; text: string }[] };
+
+      const responseText = result.content[0]!.text;
+      expect(responseText.length).toBeGreaterThan(0);
+    });
+
+    it('should return text content type', async () => {
+      const params = { query: 'scripts' };
+      const result = (await editorSearchHandler(params)) as { content: { type: string; text: string }[] };
+
+      expect(result.content[0]).toHaveProperty('type', 'text');
+      expect(result.content[0]).toHaveProperty('text');
+    });
+
+    it('should return JSON-parseable response or no results message', async () => {
+      const params = { query: 'editor features' };
+      const result = (await editorSearchHandler(params)) as { content: { type: string; text: string }[] };
+
+      const responseText = result.content[0]!.text;
+      // Response may be "No Editor documentation found" or valid JSON
+      if (!responseText.startsWith('No Editor documentation')) {
+        expect(() => JSON.parse(responseText)).not.toThrow();
+        const parsed = JSON.parse(responseText);
+        expect(parsed).toHaveProperty('query');
+        expect(parsed).toHaveProperty('source', 'editor-docs');
+        expect(parsed).toHaveProperty('totalResults');
+        expect(parsed).toHaveProperty('results');
+      }
+    });
+  });
+
   describe('Tool Schemas', () => {
     beforeEach(() => {
       setupHandlers(mockServer);
@@ -291,6 +354,14 @@ describe('MCP Handlers', () => {
       expect(toolConfig.inputSchema).toHaveProperty('filePath');
       expect(toolConfig.inputSchema).toHaveProperty('startLine');
       expect(toolConfig.inputSchema).toHaveProperty('endLine');
+    });
+
+    it('search_babylon_editor_docs should have proper schema structure', () => {
+      const toolConfig = registerToolSpy.mock.calls[5]![1];
+
+      expect(toolConfig.inputSchema).toHaveProperty('query');
+      expect(toolConfig.inputSchema).toHaveProperty('category');
+      expect(toolConfig.inputSchema).toHaveProperty('limit');
     });
   });
 

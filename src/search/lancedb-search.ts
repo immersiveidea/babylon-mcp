@@ -55,6 +55,7 @@ export class LanceDBSearch {
       content: this.extractRelevantSnippet(doc.content, query),
       url: doc.url,
       category: doc.category,
+      source: doc.source,
       score: doc._distance ? 1 - doc._distance : 0, // Convert distance to similarity score
       keywords: doc.keywords.split(', ').filter(Boolean),
     }));

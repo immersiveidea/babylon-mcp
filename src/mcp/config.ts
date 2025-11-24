@@ -12,13 +12,14 @@ export const MCP_SERVER_CONFIG = {
   capabilities: {
     tools: {
       description:
-        'Provides tools for searching and retrieving Babylon.js documentation, API references, and source code',
+        'Provides tools for searching and retrieving Babylon.js documentation, API references, source code, and Editor documentation',
       available: [
         'search_babylon_docs',
         'get_babylon_doc',
         'search_babylon_api',
         'search_babylon_source',
         'get_babylon_source',
+        'search_babylon_editor_docs',
       ],
     },
     prompts: {
@@ -32,13 +33,14 @@ export const MCP_SERVER_CONFIG = {
   },
 
   instructions:
-    'Babylon MCP Server provides access to Babylon.js documentation, API references, and source code. ' +
+    'Babylon MCP Server provides access to Babylon.js documentation, API references, source code, and Editor documentation. ' +
     'Available tools:\n' +
     '- search_babylon_docs: Search documentation with optional category filtering\n' +
     '- get_babylon_doc: Retrieve full documentation page by path\n' +
     '- search_babylon_api: Search API documentation (classes, methods, properties)\n' +
     '- search_babylon_source: Search Babylon.js source code files with optional package filtering\n' +
     '- get_babylon_source: Retrieve source file content with optional line range\n' +
+    '- search_babylon_editor_docs: Search Babylon.js Editor documentation for tool usage and workflows\n' +
     'This server helps reduce token usage by providing a canonical source for Babylon.js framework information.',
 
   transport: {
@@ -61,6 +63,10 @@ export const MCP_SERVER_CONFIG = {
     havok: {
       repository: 'https://github.com/BabylonJS/havok.git',
       description: 'Havok Physics integration',
+    },
+    editor: {
+      repository: 'https://github.com/BabylonJS/Editor.git',
+      description: 'Babylon.js Editor tool and documentation',
     },
   },
 } as const;

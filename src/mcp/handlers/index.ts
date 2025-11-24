@@ -4,16 +4,18 @@ import * as getDocHandler from './docs/get-doc.handler.js';
 import * as searchApiHandler from './api/search-api.handler.js';
 import * as searchSourceHandler from './source/search-source.handler.js';
 import * as getSourceHandler from './source/get-source.handler.js';
+import * as searchEditorDocsHandler from './editor/search-editor-docs.handler.js';
 
 /**
  * Register all MCP tool handlers with the server.
  *
- * This function sets up all 5 Babylon.js MCP tools:
+ * This function sets up all 6 Babylon.js MCP tools:
  * - search_babylon_docs: Search documentation
  * - get_babylon_doc: Get specific documentation
  * - search_babylon_api: Search API documentation
  * - search_babylon_source: Search source code
  * - get_babylon_source: Get source code files
+ * - search_babylon_editor_docs: Search Editor documentation
  */
 export function setupHandlers(server: McpServer): void {
   searchDocsHandler.register(server);
@@ -21,4 +23,5 @@ export function setupHandlers(server: McpServer): void {
   searchApiHandler.register(server);
   searchSourceHandler.register(server);
   getSourceHandler.register(server);
+  searchEditorDocsHandler.register(server);
 }

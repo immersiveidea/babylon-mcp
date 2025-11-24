@@ -12,7 +12,7 @@ export class TsxParser {
   /**
    * Parse a TSX file and extract documentation content
    */
-  async parseFile(filePath: string, urlPrefix: string): Promise<DocumentMetadata> {
+  async parseFile(filePath: string, _urlPrefix: string): Promise<DocumentMetadata> {
     const content = await fs.readFile(filePath, 'utf-8');
 
     // Parse TSX file to AST using TypeScript Compiler API
@@ -144,7 +144,7 @@ export class TsxParser {
   /**
    * Extract code blocks from CodeBlock components and template literals
    */
-  private extractCodeBlocksFromAST(sourceFile: ts.SourceFile, content: string): CodeBlock[] {
+  private extractCodeBlocksFromAST(sourceFile: ts.SourceFile, _content: string): CodeBlock[] {
     const blocks: CodeBlock[] = [];
     const codeVariables = new Map<string, string>();
 
@@ -326,29 +326,6 @@ export class TsxParser {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([word]) => word);
-  }
-
-  /**
-   * Clean text by removing extra whitespace and decoding HTML entities
-   */
-  private cleanText(text: string): string {
-    return text
-      .replace(/\s+/g, ' ')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&quot;/g, '"')
-      .replace(/&apos;/g, "'")
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .trim();
-  }
-
-  /**
-   * Check if text looks like code or import statement
-   */
-  private isCodeOrImport(text: string): boolean {
-    return /^(import|export|const|let|var|function|class|interface|type)\s/.test(text.trim()) ||
-           /^[A-Z][a-zA-Z]+Component$/.test(text.trim());
   }
 
   /**
